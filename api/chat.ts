@@ -1,5 +1,6 @@
 type ChatPayload = {
   message?: string;
+  interaction?: Record<string, unknown>;
   sessionId?: string;
   householdId?: string;
 };
@@ -27,9 +28,16 @@ export default {
       return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
     }
 
-    if (!payload.message?.trim() || !payload.sessionId || !payload.householdId) {
+    const hasMessage = Boolean(payload.message?.trim());
+    const hasInteraction = Boolean(
+      payload.interaction &&
+      typeof payload.interaction === 'object' &&
+      !Array.isArray(payload.interaction),
+    );
+
+    if ((!hasMessage && !hasInteraction) || !payload.sessionId || !payload.householdId) {
       return Response.json(
-        { error: 'message, sessionId and householdId are required.' },
+        { error: 'message or interaction, sessionId and householdId are required.' },
         { status: 400 },
       );
     }
