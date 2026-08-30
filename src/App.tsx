@@ -148,20 +148,92 @@ function LoginScreen() {
 }
 
 function Assistant({ householdId, compact = false }: { householdId: string; compact?: boolean }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem('food-agent-chat-history');
-    return saved ? JSON.parse(saved) : [{
-      id: 'welcome', role: 'assistant',
-      content: 'Hi — I’m your Food Agent. Tell me what you bought, what you used, or ask me what to cook.',
-      createdAt: new Date().toISOString(),
-    }];
-  });
+  const welcomeMessage: ChatMessage = {
+    id: 'welcome',
+    role: 'assistant',
+    content: 'Hi — I’m your Food Agent. Tell me what you bought, what you used, or ask me what to cook.',
+    createdAt: new Date().toISOString(),
+  };
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
+  const [agentSessionId, setAgentSessionId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  const loadConversation = useCallback(async (silent = false) => {
+    if (!silent) setHistoryLoading(true);
+    try {
+      const { data: sessions, error: sessionError } = await supabase
+        .from('agent_sessions')
+        .select('id')
+        .eq('household_id', householdId)
+        .eq('channel', 'web')
+        .order('last_message_at', { ascending: false })
+        .limit(1);
+      if (sessionError) throw sessionError;
+
+      const sessionId = sessions?.[0]?.id as string | undefined;
+      if (!sessionId) {
+        setAgentSessionId(null);
+        setMessages([welcomeMessage]);
+        return;
+      }
+
+      setAgentSessionId(sessionId);
+      const { data: rows, error: messageError } = await supabase
+        .from('agent_messages')
+        .select('id, role, content, created_at')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (messageError) throw messageError;
+
+      const loaded = (rows || [])
+        .filter(row => row.role === 'user' || row.role === 'assistant')
+        .reverse()
+        .map(row => ({
+          id: row.id,
+          role: row.role as 'user' | 'assistant',
+          content: row.content,
+          createdAt: row.created_at,
+        }));
+      setMessages(loaded.length ? loaded : [welcomeMessage]);
+      localStorage.removeItem('food-agent-chat-history');
+    } catch (err) {
+      console.error('Could not load Food Agent conversation', err);
+    } finally {
+      if (!silent) setHistoryLoading(false);
+    }
+  }, [householdId]);
 
   useEffect(() => {
-    localStorage.setItem('food-agent-chat-history', JSON.stringify(messages.slice(-40)));
-  }, [messages]);
+    void loadConversation();
+    const refresh = () => void loadConversation(true);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [loadConversation]);
+
+  useEffect(() => {
+    if (!agentSessionId) return;
+    const channel = supabase
+      .channel(`food-agent-chat-${agentSessionId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'agent_messages', filter: `session_id=eq.${agentSessionId}` },
+        () => void loadConversation(true),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [agentSessionId, loadConversation]);
 
   async function send(message = input) {
     const trimmed = message.trim();
@@ -172,6 +244,7 @@ function Assistant({ householdId, compact = false }: { householdId: string; comp
     try {
       const reply = await sendToFoodAgent({ message: trimmed, sessionId: getSessionId(), householdId });
       setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: reply, createdAt: new Date().toISOString() }]);
+      await loadConversation(true);
     } catch (err) {
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(), role: 'assistant',
@@ -198,6 +271,7 @@ function Assistant({ householdId, compact = false }: { householdId: string; comp
             <div className="chat-bubble">{message.content}</div>
           </div>
         ))}
+        {historyLoading && !busy && <div className="chat-row assistant"><div className="chat-avatar"><Bot size={15} /></div><div className="chat-bubble thinking"><span /><span /><span /></div></div>}
         {busy && <div className="chat-row assistant"><div className="chat-avatar"><Bot size={15} /></div><div className="chat-bubble thinking"><span /><span /><span /></div></div>}
       </div>
       {!compact && (
