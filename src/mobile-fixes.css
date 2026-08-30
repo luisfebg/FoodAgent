@@ -34,6 +34,35 @@
   .assistant-page .chat-messages{
     min-height:0;
     max-height:none;
+    gap:14px;
+    padding:16px;
+  }
+
+  .assistant-page .chat-bubble{
+    max-width:88%;
+    padding:11px 13px;
+    font-size:15px;
+    line-height:1.5;
+  }
+
+  .assistant-page .chat-avatar{
+    width:30px;
+    height:30px;
+    font-size:10px;
+  }
+
+  .assistant-page .assistant-title strong{
+    font-size:14px;
+  }
+
+  .assistant-page .assistant-title small,
+  .assistant-page .online-dot{
+    font-size:11px;
+  }
+
+  .assistant-page .quick-prompts button{
+    font-size:12px;
+    padding:8px 11px;
   }
 
   .chat-input{
