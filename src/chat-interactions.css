@@ -1,0 +1,163 @@
+/* Food Agent V6.2 structured interaction controls */
+.structured-chat-ui{
+  flex:0 0 auto;
+  padding:0 14px 12px;
+  background:#132019;
+  color:#eef4ef;
+}
+
+.assistant-card.has-structured-ui .quick-prompts{
+  display:none;
+}
+
+.structured-ui-question{
+  margin:0 0 8px;
+  color:#dce7df;
+  font-size:12px;
+  font-weight:700;
+}
+
+.structured-ui-chips{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:2px 0;
+  scrollbar-width:none;
+}
+.structured-ui-chips::-webkit-scrollbar{display:none}
+
+.structured-reply-chip,
+.structured-action-chip{
+  flex:0 0 auto;
+  min-height:36px;
+  border-radius:999px;
+  padding:0 13px;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.structured-reply-chip{
+  border:1px solid #8dac99;
+  background:#dceacb;
+  color:#263b30;
+}
+
+.structured-action-chip{
+  border:1px solid rgba(255,255,255,.14);
+  background:#24372d;
+  color:#e2eae5;
+}
+
+.structured-reply-chip:hover,
+.structured-action-chip:hover{
+  transform:translateY(-1px);
+}
+
+.structured-chat-ui button:disabled,
+.structured-chat-ui input:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+}
+
+.structured-ui-status{
+  margin-top:8px;
+  font-size:10px;
+  color:#9eb1a6;
+}
+.structured-ui-status.error{color:#f3aaa2}
+
+.structured-meal-selector{
+  max-height:min(480px,52vh);
+  overflow-y:auto;
+  border-top:1px solid rgba(255,255,255,.07);
+  padding-top:12px;
+  overscroll-behavior:contain;
+}
+
+.structured-meal-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:4px;
+}
+.structured-meal-heading strong{font-size:13px}
+.structured-meal-heading span{font-size:10px;color:#9fb0a7}
+.structured-meal-help{margin:0 0 12px;color:#aab9b1;font-size:10px;line-height:1.5}
+
+.meal-choice-groups{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.meal-choice-group{
+  min-width:0;
+  margin:0;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:13px;
+}
+.meal-choice-group legend{
+  padding:0 6px;
+  color:#dce8e0;
+  font-size:11px;
+  font-weight:800;
+}
+
+.meal-choice-card{
+  display:grid;
+  grid-template-columns:17px 1fr;
+  gap:8px;
+  align-items:start;
+  padding:9px;
+  margin-top:6px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  background:#1d3027;
+  cursor:pointer;
+}
+.meal-choice-card:hover{border-color:rgba(220,234,203,.35)}
+.meal-choice-card.selected{
+  border-color:#b8d49f;
+  background:#294036;
+  box-shadow:0 0 0 1px rgba(184,212,159,.15);
+}
+.meal-choice-card input{margin:2px 0 0;accent-color:#b8d49f}
+.meal-choice-copy{display:flex;flex-direction:column;min-width:0}
+.meal-choice-copy strong{font-family:'DM Sans',system-ui,sans-serif;font-size:10px;line-height:1.35;color:#edf2ee}
+.meal-choice-copy small{margin-top:3px;color:#9eafa6;font-size:9px;line-height:1.4}
+
+.meal-confirm-button{
+  width:100%;
+  min-height:40px;
+  margin-top:10px;
+  border:0;
+  border-radius:11px;
+  background:#dceacb;
+  color:#263b30;
+  font:inherit;
+  font-size:11px;
+  font-weight:800;
+}
+
+@media(max-width:580px){
+  .structured-chat-ui{padding:0 12px 10px}
+  .structured-ui-question{font-size:14px}
+  .structured-reply-chip,.structured-action-chip{min-height:40px;font-size:13px;padding:0 14px}
+  .structured-ui-status{font-size:12px}
+  .structured-meal-selector{max-height:46vh}
+  .structured-meal-heading strong{font-size:15px}
+  .structured-meal-heading span{font-size:12px}
+  .structured-meal-help{font-size:12px}
+  .meal-choice-groups{grid-template-columns:1fr;gap:9px}
+  .meal-choice-group{padding:9px}
+  .meal-choice-group legend{font-size:13px}
+  .meal-choice-card{grid-template-columns:20px 1fr;padding:10px}
+  .meal-choice-card input{width:16px;height:16px}
+  .meal-choice-copy strong{font-size:13px}
+  .meal-choice-copy small{font-size:11px}
+  .meal-confirm-button{min-height:46px;font-size:14px}
+}
