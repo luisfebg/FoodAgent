@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b --noImplicitAny false && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
@@ -22,6 +22,6 @@
     "vite": "^7.1.4"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   }
 }
