@@ -1,0 +1,42 @@
+/* Mobile assistant viewport and input fixes. Loaded after index.css so these rules intentionally override the base styles. */
+
+.chat-messages{
+  overflow-anchor:auto;
+  overscroll-behavior:contain;
+}
+
+@media(max-width:880px){
+  .chat-input input{
+    font-size:16px;
+    line-height:1.25;
+    min-height:44px;
+  }
+}
+
+@media(max-width:580px){
+  .assistant-page-copy{
+    display:none;
+  }
+
+  .assistant-page{
+    gap:0;
+    width:100%;
+  }
+
+  .assistant-page .assistant-card{
+    width:100%;
+    min-height:0;
+    height:calc(var(--app-viewport-height, 100dvh) - 108px);
+    max-height:calc(var(--app-viewport-height, 100dvh) - 108px);
+    border-radius:16px;
+  }
+
+  .assistant-page .chat-messages{
+    min-height:0;
+    max-height:none;
+  }
+
+  .chat-input{
+    padding-bottom:max(11px, env(safe-area-inset-bottom));
+  }
+}
