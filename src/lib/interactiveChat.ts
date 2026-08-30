@@ -325,7 +325,7 @@ function renderMealSelector(container: HTMLElement, ui: InteractiveUi) {
 }
 
 function renderCard(card: HTMLElement) {
-  let container = card.querySelector<HTMLElement>('.structured-chat-ui');
+  let container = card.querySelector<HTMLElement>(':scope > .structured-chat-ui');
   if (!latestUi) {
     container?.remove();
     card.classList.remove('has-structured-ui');
@@ -335,7 +335,7 @@ function renderCard(card: HTMLElement) {
   if (!container) {
     container = document.createElement('div');
     container.className = 'structured-chat-ui';
-    const before = card.querySelector('.quick-prompts') || card.querySelector('.chat-input');
+    const before = card.querySelector(':scope > .quick-prompts') || card.querySelector(':scope > .chat-input');
     if (before) card.insertBefore(container, before);
     else card.appendChild(container);
   }
@@ -350,6 +350,12 @@ function renderCard(card: HTMLElement) {
 
 function renderAll() {
   document.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach(renderCard);
+}
+
+function nodeContainsFullAssistant(node: Node) {
+  if (!(node instanceof HTMLElement)) return false;
+  if (node.matches(CARD_SELECTOR)) return true;
+  return Boolean(node.querySelector(CARD_SELECTOR));
 }
 
 async function syncPersistedUi() {
@@ -399,7 +405,19 @@ export function installInteractiveChat() {
     return response;
   }) as typeof window.fetch;
 
-  const observer = new MutationObserver(() => renderAll());
+  const observer = new MutationObserver(mutations => {
+    let shouldRender = false;
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (nodeContainsFullAssistant(node)) {
+          shouldRender = true;
+          break;
+        }
+      }
+      if (shouldRender) break;
+    }
+    if (shouldRender) requestAnimationFrame(renderAll);
+  });
   observer.observe(document.body, { childList: true, subtree: true });
 
   window.addEventListener('focus', () => void syncPersistedUi());
