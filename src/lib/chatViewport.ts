@@ -2,12 +2,18 @@ const CHAT_SELECTOR = '.chat-messages';
 const CHAT_INPUT_SELECTOR = '.chat-input input';
 const FOLLOW_THRESHOLD_PX = 120;
 const MOBILE_CHAT_QUERY = '(max-width: 580px)';
+const FORCE_FOLLOW_MS = 12000;
 
 const attachedChats = new WeakSet<HTMLElement>();
+const forceFollowUntil = new WeakMap<HTMLElement, number>();
 let chatFocusScrollY = 0;
 
 function isNearBottom(element: HTMLElement) {
   return element.scrollHeight - element.scrollTop - element.clientHeight <= FOLLOW_THRESHOLD_PX;
+}
+
+function shouldForceFollow(element: HTMLElement) {
+  return (forceFollowUntil.get(element) || 0) > Date.now();
 }
 
 function scrollChatToBottom(element: HTMLElement, behavior: ScrollBehavior = 'auto') {
@@ -16,6 +22,13 @@ function scrollChatToBottom(element: HTMLElement, behavior: ScrollBehavior = 'au
     scroll();
     requestAnimationFrame(scroll);
   });
+}
+
+function forceChatToLatest(element: HTMLElement) {
+  forceFollowUntil.set(element, Date.now() + FORCE_FOLLOW_MS);
+  scrollChatToBottom(element);
+  window.setTimeout(() => scrollChatToBottom(element), 60);
+  window.setTimeout(() => scrollChatToBottom(element), 260);
 }
 
 function attachChat(element: HTMLElement) {
@@ -27,13 +40,13 @@ function attachChat(element: HTMLElement) {
   element.addEventListener(
     'scroll',
     () => {
-      followLatest = isNearBottom(element);
+      if (!shouldForceFollow(element)) followLatest = isNearBottom(element);
     },
     { passive: true },
   );
 
   const messageObserver = new MutationObserver(() => {
-    if (followLatest) scrollChatToBottom(element);
+    if (followLatest || shouldForceFollow(element)) scrollChatToBottom(element);
   });
 
   messageObserver.observe(element, {
@@ -92,6 +105,17 @@ export function installChatViewportFixes() {
 
   pageObserver.observe(document.body, { childList: true, subtree: true });
 
+  document.addEventListener(
+    'submit',
+    event => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.matches('.chat-input')) return;
+      const chat = form.closest('.assistant-card')?.querySelector<HTMLElement>(CHAT_SELECTOR);
+      if (chat) forceChatToLatest(chat);
+    },
+    true,
+  );
+
   document.addEventListener('focusin', event => {
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || !input.matches(CHAT_INPUT_SELECTOR)) return;
@@ -100,10 +124,10 @@ export function installChatViewportFixes() {
     if (!chat) return;
 
     setMobileChatFocus(true);
-    scrollChatToBottom(chat);
+    forceChatToLatest(chat);
     window.setTimeout(() => {
       syncVisualViewport();
-      scrollChatToBottom(chat);
+      forceChatToLatest(chat);
     }, 300);
   });
 
